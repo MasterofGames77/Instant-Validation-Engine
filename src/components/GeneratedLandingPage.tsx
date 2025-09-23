@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GeneratedContent, SignupData } from "@/types";
 import {
   generateId,
@@ -21,8 +21,29 @@ export default function GeneratedLandingPage({
   onSignup,
 }: GeneratedLandingPageProps) {
   const [email, setEmail] = useState("");
+  const [wouldPay, setWouldPay] = useState<boolean | null>(null);
+  const [pricePoint, setPricePoint] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [source, setSource] = useState<string | undefined>();
+
+  // Feedback state
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [rating, setRating] = useState<number>(0);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  // Extract UTM source from URL parameters
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmSource = urlParams.get("s") || urlParams.get("utm_source");
+      if (utmSource) {
+        setSource(utmSource);
+      }
+    }
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,28 +51,92 @@ export default function GeneratedLandingPage({
 
     setIsSubmitting(true);
 
-    // Create signup data
-    const signup: SignupData = {
-      id: generateId(),
-      email: email.trim(),
-      startupId,
-      timestamp: Date.now(),
-    };
+    try {
+      // Submit to API
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          startupId,
+          source,
+          wouldPay: wouldPay,
+          pricePoint: pricePoint ? Number(pricePoint) : undefined,
+        }),
+      });
 
-    // Save to local storage
-    const existingSignups = getFromStorage<SignupData[]>(
-      STORAGE_KEYS.SIGNUPS,
-      []
-    );
-    const updatedSignups = [...existingSignups, signup];
-    saveToStorage(STORAGE_KEYS.SIGNUPS, updatedSignups);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to sign up");
+      }
 
-    // Notify parent component
-    onSignup(signup);
+      // Create signup data for local storage and parent notification
+      const signup: SignupData = {
+        id: generateId(),
+        email: email.trim(),
+        startupId,
+        timestamp: Date.now(),
+        source,
+        wouldPay: wouldPay || false,
+        pricePoint: pricePoint ? Number(pricePoint) : undefined,
+      };
 
-    setIsSubmitted(true);
-    setIsSubmitting(false);
-    setEmail("");
+      // Save to local storage
+      const existingSignups = getFromStorage<SignupData[]>(
+        STORAGE_KEYS.SIGNUPS,
+        []
+      );
+      const updatedSignups = [...existingSignups, signup];
+      saveToStorage(STORAGE_KEYS.SIGNUPS, updatedSignups);
+
+      // Notify parent component
+      onSignup(signup);
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Signup error:", error);
+      alert("Failed to sign up. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedback.trim() || rating === 0) return;
+
+    setIsSubmittingFeedback(true);
+
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          startupId,
+          feedback: feedback.trim(),
+          rating,
+          source,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit feedback");
+      }
+
+      setFeedbackSubmitted(true);
+      setFeedback("");
+      setRating(0);
+    } catch (error) {
+      console.error("Feedback error:", error);
+      alert("Failed to submit feedback. Please try again.");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   if (isSubmitted) {
@@ -117,6 +202,60 @@ export default function GeneratedLandingPage({
                 disabled={isSubmitting}
               />
             </div>
+
+            {/* Intent Survey */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-700 mb-3">
+                Would you pay to keep this page live & get 1-click share assets?
+              </p>
+              <div className="flex space-x-4 mb-3">
+                <label className="flex items-center text-gray-800 font-medium">
+                  <input
+                    type="radio"
+                    name="wouldPay"
+                    value="yes"
+                    checked={wouldPay === true}
+                    onChange={() => setWouldPay(true)}
+                    className="mr-2"
+                    disabled={isSubmitting}
+                  />
+                  Yes
+                </label>
+                <label className="flex items-center text-gray-800 font-medium">
+                  <input
+                    type="radio"
+                    name="wouldPay"
+                    value="no"
+                    checked={wouldPay === false}
+                    onChange={() => setWouldPay(false)}
+                    className="mr-2"
+                    disabled={isSubmitting}
+                  />
+                  No
+                </label>
+              </div>
+
+              {wouldPay === true && (
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">
+                    What price point interests you?
+                  </label>
+                  <select
+                    value={pricePoint}
+                    onChange={(e) => setPricePoint(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    disabled={isSubmitting}
+                  >
+                    <option value="">Select price</option>
+                    <option value="0">Free</option>
+                    <option value="9">$9/month</option>
+                    <option value="19">$19/month</option>
+                    <option value="29">$29/month</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
             <button
               type="submit"
               disabled={isSubmitting || !email.trim()}
@@ -125,6 +264,80 @@ export default function GeneratedLandingPage({
               {isSubmitting ? "Signing Up..." : content.cta}
             </button>
           </form>
+
+          {/* Feedback Section */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="text-center mb-4">
+              <button
+                onClick={() => setShowFeedback(!showFeedback)}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                {showFeedback ? "Hide" : "Share your thoughts"} about this idea
+              </button>
+            </div>
+
+            {showFeedback && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                {feedbackSubmitted ? (
+                  <div className="text-center py-4">
+                    <div className="text-green-600 text-2xl mb-2">✓</div>
+                    <p className="text-gray-700">
+                      Thank you for your feedback!
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        How would you rate this idea? (1-5 stars)
+                      </label>
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            className={`text-2xl ${
+                              star <= rating
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                            } hover:text-yellow-400 transition-colors`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        What do you think about this idea?
+                      </label>
+                      <textarea
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                        placeholder="Share your thoughts, suggestions, or concerns..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-none"
+                        rows={3}
+                        disabled={isSubmittingFeedback}
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={
+                        isSubmittingFeedback || !feedback.trim() || rating === 0
+                      }
+                      className="w-full bg-gray-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSubmittingFeedback
+                        ? "Submitting..."
+                        : "Submit Feedback"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

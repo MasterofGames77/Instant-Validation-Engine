@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { generateId } from "@/lib/storage";
 import { StartupIdea } from "@/types";
 
@@ -11,6 +11,18 @@ interface IdeaInputProps {
 
 export default function IdeaInput({ onIdeaSubmit, isLoading }: IdeaInputProps) {
   const [idea, setIdea] = useState("");
+  const [source, setSource] = useState<string | undefined>();
+
+  // Extract UTM source from URL parameters
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmSource = urlParams.get("s") || urlParams.get("utm_source");
+      if (utmSource) {
+        setSource(utmSource);
+      }
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +31,7 @@ export default function IdeaInput({ onIdeaSubmit, isLoading }: IdeaInputProps) {
         id: generateId(),
         idea: idea.trim(),
         timestamp: Date.now(),
+        source: source,
       };
       onIdeaSubmit(startupIdea);
       setIdea("");

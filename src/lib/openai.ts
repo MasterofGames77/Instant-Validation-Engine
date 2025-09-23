@@ -9,6 +9,7 @@ export async function generateLandingPageContent(idea: string): Promise<{
   pitch: string;
   cta: string;
   features: string[];
+  industry: string;
 }> {
   try {
     const completion = await openai.chat.completions.create({
@@ -20,7 +21,9 @@ export async function generateLandingPageContent(idea: string): Promise<{
           Create content that would make people want to sign up for early access or updates about this product.
           Focus on the problem being solved, the solution, and create urgency around getting early access.
           
-          IMPORTANT: The headline should be punchy and specific to the idea. The pitch should be a brief, compelling description that complements the headline without repeating it. Keep the pitch concise and focused on the value proposition.`
+          IMPORTANT: The headline should be punchy and specific to the idea. The pitch should be a brief, compelling description that complements the headline without repeating it. Keep the pitch concise and focused on the value proposition.
+          
+          Also identify the industry category for the startup idea. Choose from: Technology, Healthcare, Finance, Education, E-commerce, SaaS, AI/ML, Mobile Apps, Gaming, Real Estate, Food & Beverage, Transportation, Energy, Entertainment, or Other.`
         },
         {
           role: "user",
@@ -31,10 +34,11 @@ export async function generateLandingPageContent(idea: string): Promise<{
           2. A brief pitch paragraph (1-2 sentences) - describe the value proposition without repeating the headline
           3. A call-to-action button text (max 20 characters)
           4. 3-4 key features/benefits (short phrases)
+          5. The industry category (choose from: Technology, Healthcare, Finance, Education, E-commerce, SaaS, AI/ML, Mobile Apps, Gaming, Real Estate, Food & Beverage, Transportation, Energy, Entertainment, or Other)
           
           The pitch should be something like "Join thousands of early adopters who are already excited about this innovation" or similar, not a repeat of the headline.
           
-          Format as JSON with keys: headline, pitch, cta, features`
+          Format as JSON with keys: headline, pitch, cta, features, industry`
         }
       ],
       temperature: 0.8,
@@ -75,7 +79,8 @@ export async function generateLandingPageContent(idea: string): Promise<{
       headline: parsed.headline || `Revolutionary ${idea}`,
       pitch: parsed.pitch || `We're building the future of ${idea}. Join thousands of early adopters who are already excited about this innovation.`,
       cta: parsed.cta || 'Get Early Access',
-      features: parsed.features || ['Innovative solution', 'Easy to use', 'Game-changing results']
+      features: parsed.features || ['Innovative solution', 'Easy to use', 'Game-changing results'],
+      industry: parsed.industry || 'Technology'
     };
   } catch (error) {
     console.error('Error generating content:', error);
@@ -84,7 +89,8 @@ export async function generateLandingPageContent(idea: string): Promise<{
       headline: `Revolutionary ${idea}`,
       pitch: `We're building the future of ${idea}. Join thousands of early adopters who are already excited about this innovation.`,
       cta: 'Get Early Access',
-      features: ['Innovative solution', 'Easy to use', 'Game-changing results']
+      features: ['Innovative solution', 'Easy to use', 'Game-changing results'],
+      industry: 'Technology'
     };
   }
 }

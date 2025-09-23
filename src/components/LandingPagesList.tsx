@@ -51,6 +51,7 @@ export default function LandingPagesList({
             "Easy to use",
             "Game-changing results",
           ],
+          industry: "Technology",
         };
         onSelectPage(idea, content);
       }
@@ -67,6 +68,7 @@ export default function LandingPagesList({
           "Easy to use",
           "Game-changing results",
         ],
+        industry: "Technology",
       };
       onSelectPage(idea, content);
     }

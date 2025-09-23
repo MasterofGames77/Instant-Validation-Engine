@@ -35,7 +35,11 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ idea: idea.idea }),
+        body: JSON.stringify({
+          idea: idea.idea,
+          source: idea.source,
+          startupId: idea.id,
+        }),
       });
 
       if (!response.ok) {
@@ -57,6 +61,7 @@ export default function Home() {
           "Easy to use",
           "Game-changing results",
         ],
+        industry: "Technology",
       });
       setShowAnalytics(true);
     } finally {
