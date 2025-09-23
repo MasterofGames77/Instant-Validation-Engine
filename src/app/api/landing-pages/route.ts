@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('Fetching landing pages...');
     
@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${generations.length} generations`);
     
     // Transform the data to match the StartupIdea interface
-    const ideas = generations.map((gen: any) => ({
-      id: gen.startupId,
-      idea: gen.idea,
-      timestamp: gen.createdAt.getTime(),
-      source: gen.source,
-      industry: gen.industry
+    const ideas = generations.map((gen) => ({
+      id: gen.startupId as string,
+      idea: gen.idea as string,
+      timestamp: (gen.createdAt as Date).getTime(),
+      source: gen.source as string,
+      industry: gen.industry as string
     }));
     
     console.log('Transformed ideas:', ideas.length);

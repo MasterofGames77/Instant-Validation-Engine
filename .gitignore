@@ -44,5 +44,3 @@ next-env.d.ts
 mongo credentials.txt
 
 SETUP_INSTRUCTIONS.md
-
-test-mongodb-connection.js

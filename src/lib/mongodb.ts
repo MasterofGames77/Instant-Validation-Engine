@@ -19,7 +19,7 @@ export async function connectToDatabase() {
     // If no URI is provided, return a mock connection for development
     if (!uri) {
       console.warn('No MongoDB URI provided. Running in offline mode.');
-      return { client: null as any, db: null as any };
+      return { client: null as unknown as MongoClient, db: null as unknown as Db };
     }
 
     // MongoDB connection options to handle SSL issues
@@ -47,7 +47,7 @@ export async function connectToDatabase() {
     console.error('Failed to connect to MongoDB:', error);
     // Return mock connection instead of throwing to prevent app crashes
     console.warn('Falling back to offline mode due to MongoDB connection failure');
-    return { client: null as any, db: null as any };
+    return { client: null as unknown as MongoClient, db: null as unknown as Db };
   }
 }
 
