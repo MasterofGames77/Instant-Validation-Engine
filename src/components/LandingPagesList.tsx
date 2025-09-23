@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { StartupIdea, GeneratedContent } from "@/types";
-import { getFromStorage, STORAGE_KEYS } from "@/lib/storage";
 
 interface LandingPagesListProps {
   onSelectPage: (idea: StartupIdea, content: GeneratedContent) => void;
@@ -17,12 +16,25 @@ export default function LandingPagesList({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedIdeas = getFromStorage<StartupIdea[]>(
-      STORAGE_KEYS.STARTUP_IDEAS,
-      []
-    );
-    setIdeas(savedIdeas.reverse()); // Most recent first
-    setLoading(false);
+    const fetchIdeas = async () => {
+      try {
+        const response = await fetch("/api/landing-pages");
+        if (response.ok) {
+          const ideas = await response.json();
+          setIdeas(ideas);
+        } else {
+          console.error("Failed to fetch landing pages");
+          setIdeas([]);
+        }
+      } catch (error) {
+        console.error("Error fetching landing pages:", error);
+        setIdeas([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIdeas();
   }, []);
 
   const handleSelectPage = async (idea: StartupIdea) => {
@@ -33,7 +45,11 @@ export default function LandingPagesList({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ idea: idea.idea }),
+        body: JSON.stringify({
+          idea: idea.idea,
+          source: idea.source,
+          startupId: idea.id,
+        }),
       });
 
       if (response.ok) {

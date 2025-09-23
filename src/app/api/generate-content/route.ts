@@ -20,13 +20,22 @@ export async function POST(request: NextRequest) {
       const { db } = await connectToDatabase();
       const collection = db.collection('generations');
       
-      await collection.insertOne({
+      // Check if this exact generation already exists to prevent duplicates
+      const existingGeneration = await collection.findOne({
         startupId: startupId || 'unknown',
-        idea,
-        source: source || 'direct',
-        industry: content.industry! || 'unknown', // We'll add this to the AI response
-        createdAt: new Date(),
+        idea: idea.trim(),
+        source: source || 'direct'
       });
+      
+      if (!existingGeneration) {
+        await collection.insertOne({
+          startupId: startupId || 'unknown',
+          idea: idea.trim(),
+          source: source || 'direct',
+          industry: content.industry! || 'unknown',
+          createdAt: new Date(),
+        });
+      }
     } catch (dbError) {
       console.error('Failed to store generation data:', dbError);
       // Don't fail the request if DB storage fails
