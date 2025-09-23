@@ -1,4 +1,4 @@
-# Instant Validation Engine - AI Market Tester
+# Market Pulse - AI Market Tester
 
 A hackathon project that generates instant landing pages for startup ideas using AI, allowing entrepreneurs to test market interest and validate their concepts quickly.
 

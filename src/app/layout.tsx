@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Instant Validation Engine - AI Market Tester",
+  title: "Market Pulse - AI Market Tester",
   description:
     "Test your startup ideas instantly with AI-generated landing pages and real-time analytics",
 };
