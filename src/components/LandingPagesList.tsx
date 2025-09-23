@@ -14,6 +14,7 @@ export default function LandingPagesList({
 }: LandingPagesListProps) {
   const [ideas, setIdeas] = useState<StartupIdea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchIdeas = async () => {
@@ -22,12 +23,17 @@ export default function LandingPagesList({
         if (response.ok) {
           const ideas = await response.json();
           setIdeas(ideas);
+          setError(null);
         } else {
           console.error("Failed to fetch landing pages");
+          setError("Failed to load landing pages. Please try again.");
           setIdeas([]);
         }
       } catch (error) {
         console.error("Error fetching landing pages:", error);
+        setError(
+          "Unable to connect to the server. Please check your connection."
+        );
         setIdeas([]);
       } finally {
         setLoading(false);
@@ -93,8 +99,13 @@ export default function LandingPagesList({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6">
-          <div className="text-center">Loading...</div>
+        <div className="bg-white rounded-lg p-8 shadow-lg">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="text-gray-700 font-medium">
+              Loading your landing pages...
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -118,7 +129,18 @@ export default function LandingPagesList({
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {ideas.length === 0 ? (
+          {error ? (
+            <div className="text-center py-12 text-red-500">
+              <div className="text-4xl mb-4">⚠️</div>
+              <p className="font-medium">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : ideas.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="text-4xl mb-4">📄</div>
               <p>No landing pages created yet.</p>
