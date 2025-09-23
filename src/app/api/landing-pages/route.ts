@@ -5,13 +5,14 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Fetching landing pages...');
     
-    // Check if MongoDB URI is available
-    if (!process.env.MONGODB_URI) {
-      console.error('MONGODB_URI not found in environment variables');
-      return NextResponse.json([]); // Return empty array instead of error
+    const { db } = await connectToDatabase();
+    
+    // Check if database connection is available
+    if (!db) {
+      console.warn('Database not available, returning empty array');
+      return NextResponse.json([]);
     }
     
-    const { db } = await connectToDatabase();
     console.log('Connected to database');
     
     const collection = db.collection('generations');
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${generations.length} generations`);
     
     // Transform the data to match the StartupIdea interface
-    const ideas = generations.map(gen => ({
+    const ideas = generations.map((gen: any) => ({
       id: gen.startupId,
       idea: gen.idea,
       timestamp: gen.createdAt.getTime(),

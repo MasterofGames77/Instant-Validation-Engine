@@ -23,6 +23,15 @@ export async function POST(request: NextRequest) {
 
     // Store feedback in MongoDB
     const { db } = await connectToDatabase();
+    
+    if (!db) {
+      console.warn('Database not available, cannot store feedback');
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
+      );
+    }
+    
     const collection = db.collection('feedback');
     
     const feedbackData = {
@@ -55,6 +64,12 @@ export async function GET(request: NextRequest) {
     const startupId = searchParams.get('startupId');
     
     const { db } = await connectToDatabase();
+    
+    if (!db) {
+      console.warn('Database not available, returning empty feedback');
+      return NextResponse.json({ feedback: [] });
+    }
+    
     const collection = db.collection('feedback');
     
     let query = {};

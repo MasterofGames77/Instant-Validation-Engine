@@ -24,6 +24,15 @@ export async function POST(request: NextRequest) {
 
     // Store signup data in MongoDB
     const { db } = await connectToDatabase();
+    
+    if (!db) {
+      console.warn('Database not available, cannot store signup');
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
+      );
+    }
+    
     const collection = db.collection('signups');
     
     const signupData = {
@@ -70,6 +79,12 @@ export async function GET(request: NextRequest) {
     const startupId = searchParams.get('startupId');
     
     const { db } = await connectToDatabase();
+    
+    if (!db) {
+      console.warn('Database not available, returning empty signups');
+      return NextResponse.json({ signups: [] });
+    }
+    
     const collection = db.collection('signups');
     
     let query = {};

@@ -18,23 +18,28 @@ export async function POST(request: NextRequest) {
     // Store generation data in MongoDB for analytics
     try {
       const { db } = await connectToDatabase();
-      const collection = db.collection('generations');
       
-      // Check if this exact generation already exists to prevent duplicates
-      const existingGeneration = await collection.findOne({
-        startupId: startupId || 'unknown',
-        idea: idea.trim(),
-        source: source || 'direct'
-      });
-      
-      if (!existingGeneration) {
-        await collection.insertOne({
+      if (db) {
+        const collection = db.collection('generations');
+        
+        // Check if this exact generation already exists to prevent duplicates
+        const existingGeneration = await collection.findOne({
           startupId: startupId || 'unknown',
           idea: idea.trim(),
-          source: source || 'direct',
-          industry: content.industry! || 'unknown',
-          createdAt: new Date(),
+          source: source || 'direct'
         });
+        
+        if (!existingGeneration) {
+          await collection.insertOne({
+            startupId: startupId || 'unknown',
+            idea: idea.trim(),
+            source: source || 'direct',
+            industry: content.industry! || 'unknown',
+            createdAt: new Date(),
+          });
+        }
+      } else {
+        console.warn('Database not available, skipping generation storage');
       }
     } catch (dbError) {
       console.error('Failed to store generation data:', dbError);
