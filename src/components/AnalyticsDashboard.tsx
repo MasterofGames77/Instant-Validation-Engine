@@ -71,10 +71,10 @@ export default function AnalyticsDashboard({
 
         // Calculate validation metrics
         const wouldPayCount = apiSignups.filter(
-          (s: SignupData) => s.wouldPay
+          (s: { wouldPay: boolean }) => s.wouldPay
         ).length;
         const signupsBySource = apiSignups.reduce(
-          (acc: Record<string, number>, signup: SignupData) => {
+          (acc: Record<string, number>, signup: { source?: string }) => {
             const source = signup.source || "direct";
             acc[source] = (acc[source] || 0) + 1;
             return acc;
@@ -285,31 +285,55 @@ export default function AnalyticsDashboard({
         <div className="bg-white rounded-lg p-6">
           {analytics.recentSignups.length > 0 ? (
             <div className="space-y-3">
-              {analytics.recentSignups.map((signup) => (
-                <div
-                  key={signup.id}
-                  className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-gray-700 font-medium">
-                      {signup.email}
-                    </span>
-                    {signup.wouldPay && (
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                        Would Pay
+              {analytics.recentSignups.map(
+                (signup: {
+                  id: string;
+                  email: string;
+                  wouldPay: boolean;
+                  pricePoint?: number;
+                  timestamp?: number;
+                  createdAt?: Date | string;
+                }) => (
+                  <div
+                    key={signup.id}
+                    className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-gray-700 font-medium">
+                        {signup.email}
                       </span>
-                    )}
-                    {signup.pricePoint && (
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                        ${signup.pricePoint}/mo
-                      </span>
-                    )}
+                      {signup.wouldPay && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                          Would Pay
+                        </span>
+                      )}
+                      {signup.pricePoint && (
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                          ${signup.pricePoint}/mo
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {(() => {
+                        try {
+                          if (signup.timestamp) {
+                            return new Date(
+                              signup.timestamp
+                            ).toLocaleDateString();
+                          } else if (signup.createdAt) {
+                            return new Date(
+                              signup.createdAt
+                            ).toLocaleDateString();
+                          }
+                          return "Invalid Date";
+                        } catch {
+                          return "Invalid Date";
+                        }
+                      })()}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {new Date(signup.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
