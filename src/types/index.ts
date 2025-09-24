@@ -29,7 +29,8 @@ export interface CustomerFeedback {
   startupId: string;
   feedback: string;
   rating: number; // 1-5 stars
-  timestamp: number;
+  timestamp?: number; // For local storage
+  createdAt?: Date | string; // For MongoDB API
   source?: string;
 }
 

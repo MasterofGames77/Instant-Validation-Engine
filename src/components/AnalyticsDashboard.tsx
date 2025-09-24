@@ -253,7 +253,22 @@ export default function AnalyticsDashboard({
                         ))}
                       </div>
                       <span className="text-sm text-gray-500">
-                        {new Date(feedback.timestamp).toLocaleDateString()}
+                        {(() => {
+                          try {
+                            if (feedback.timestamp) {
+                              return new Date(
+                                feedback.timestamp
+                              ).toLocaleDateString();
+                            } else if (feedback.createdAt) {
+                              return new Date(
+                                feedback.createdAt
+                              ).toLocaleDateString();
+                            }
+                            return "Invalid Date";
+                          } catch {
+                            return "Invalid Date";
+                          }
+                        })()}
                       </span>
                     </div>
                     <p className="text-gray-700 italic">
